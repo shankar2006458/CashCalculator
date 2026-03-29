@@ -1,0 +1,1025 @@
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#06070d">
+  <title>Cash Counter</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&amp;family=DM+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --accent: #6366f1;
+      --accent-glow: rgba(99, 102, 241, 0.25);
+      --accent-light: rgba(99, 102, 241, 0.1);
+      --bg: #06070d;
+      --surface: #0f111a;
+      --surface2: #161b28;
+      --surface3: #1a2038;
+      --border: #252d3f;
+      --border-light: #313d52;
+      --text: #f5f7fc;
+      --text-secondary: #a8adc4;
+      --muted: #6b7494;
+      --success: #10b981;
+      --success-light: rgba(16, 185, 129, 0.1);
+      --error: #ef4444;
+      --error-light: rgba(239, 68, 68, 0.1);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0; padding: 0;
+      height: 100%;
+      background: linear-gradient(135deg, var(--bg) 0%, #0a0d15 100%);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -webkit-touch-callout: none;
+    }
+
+    #app {
+      height: 100%;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    /* SCREENS */
+    .screen {
+      display: none;
+      min-height: 100%;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 0 100px 0;
+      animation: fadeIn 0.5s ease;
+    }
+    .screen.active { display: flex; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* CURRENCY SCREEN */
+    #currency-screen {
+      justify-content: center;
+      padding: 40px 24px;
+    }
+
+    .currency-card {
+      width: 100%;
+      max-width: 440px;
+      background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: 48px 32px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), inset 0 1px 0 var(--border-light);
+      backdrop-filter: blur(10px);
+    }
+
+    .app-logo {
+      width: 72px; height: 72px;
+      background: linear-gradient(135deg, var(--accent), #818cf8);
+      border-radius: 20px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 36px;
+      margin-bottom: 28px;
+      box-shadow: 0 8px 32px var(--accent-glow), inset 0 1px 0 rgba(255,255,255,0.2);
+    }
+
+    .app-title {
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -0.8px;
+      margin: 0 0 8px 0;
+      background: linear-gradient(135deg, var(--text) 0%, var(--text-secondary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .app-subtitle {
+      color: var(--muted);
+      font-size: 15px;
+      font-weight: 500;
+      margin: 0 0 36px 0;
+      letter-spacing: 0.3px;
+    }
+
+    label.field-label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .custom-select {
+      width: 100%;
+      height: 52px;
+      background: var(--surface3);
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 16px;
+      font-weight: 500;
+      padding: 16px 18px;
+      padding-right: 40px;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      cursor: pointer;
+      outline: none;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .custom-select:hover {
+      border-color: var(--border-light);
+      background: linear-gradient(135deg, var(--surface3), var(--surface2));
+    }
+    .custom-select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-light), 0 0 0 1px var(--accent);
+    }
+
+    .select-wrapper {
+      position: relative;
+      margin-bottom: 32px;
+    }
+    .select-arrow {
+      position: absolute;
+      right: 18px; top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      color: var(--muted);
+      transition: color 0.3s;
+      pointer-events: none;
+    }
+    .custom-select:focus ~ .select-arrow {
+      color: var(--accent);
+    }
+
+    .btn-primary {
+      width: 100%;
+      background: linear-gradient(135deg, var(--accent), #818cf8);
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 8px 24px var(--accent-glow);
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-primary::before {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 100%; height: 100%;
+      background: rgba(255,255,255,0.2);
+      transition: left 0.3s;
+    }
+    .btn-primary:hover::before { left: 100%; }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 32px var(--accent-glow); }
+    .btn-primary:active { transform: translateY(0); }
+
+    /* MAIN SCREEN */
+    #main-screen {
+      align-items: stretch;
+      padding: 0;
+    }
+
+    .main-header {
+      background: linear-gradient(180deg, var(--surface) 0%, var(--surface2) 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 24px 20px 20px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    }
+
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .header-app-name {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text-secondary);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 8px 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-ghost:hover {
+      color: var(--accent);
+      border-color: var(--accent);
+      background: var(--accent-light);
+    }
+    .btn-ghost:active { transform: scale(0.98); }
+
+    .btn-reset {
+      background: var(--error-light);
+      border: 1px solid var(--error);
+      border-radius: 10px;
+      color: #ff6b6b;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 8px 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-reset:hover {
+      background: rgba(239, 68, 68, 0.15);
+      border-color: #ff8888;
+      box-shadow: 0 0 12px rgba(239, 68, 68, 0.15);
+    }
+    .btn-reset:active { transform: scale(0.98); }
+
+    .total-display {
+      margin-top: 0;
+    }
+
+    .total-label {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 700;
+      margin-bottom: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .total-amount {
+      font-family: 'DM Mono', monospace;
+      font-size: 42px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: -1.5px;
+      line-height: 1;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .total-amount.has-value {
+      color: var(--accent);
+      text-shadow: 0 0 24px var(--accent-glow);
+    }
+
+    .total-amount.animate {
+      transform: scale(1.05);
+    }
+
+    /* DENOMINATION LIST */
+    .denom-list {
+      flex: 1;
+      padding: 20px 16px 28px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 580px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .denom-row {
+      display: flex;
+      align-items: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px 18px;
+      gap: 14px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    .denom-row::before {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, var(--accent-light), transparent);
+      transition: left 0.6s;
+      pointer-events: none;
+    }
+    .denom-row.updated::before { left: 100%; }
+    .denom-row:hover {
+      border-color: var(--border-light);
+      background: linear-gradient(135deg, var(--surface), var(--surface2));
+    }
+    .denom-row:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-light);
+    }
+
+    .denom-badge {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 8px 14px;
+      font-family: 'DM Mono', monospace;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      min-width: 76px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .denom-multiplier {
+      color: var(--muted);
+      font-size: 16px;
+      font-weight: 400;
+      flex-shrink: 0;
+    }
+
+    .denom-input {
+      flex: 1;
+      background: var(--surface3);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 18px;
+      font-weight: 600;
+      text-align: center;
+      padding: 12px 14px;
+      outline: none;
+      min-width: 0;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .denom-input:hover {
+      border-color: var(--border-light);
+    }
+    .denom-input:focus {
+      border-color: var(--accent);
+      background: linear-gradient(135deg, var(--surface3), var(--surface2));
+      box-shadow: 0 0 0 3px var(--accent-light);
+    }
+    .denom-input::placeholder { color: var(--muted); }
+    .denom-input::-webkit-outer-spin-button,
+    .denom-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    .denom-input[type=number] { -moz-appearance: textfield; }
+
+    .denom-equals {
+      color: var(--muted);
+      font-size: 16px;
+      font-weight: 400;
+      flex-shrink: 0;
+    }
+
+    .denom-subtotal {
+      font-family: 'DM Mono', monospace;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--muted);
+      min-width: 88px;
+      text-align: right;
+      flex-shrink: 0;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .denom-subtotal.active {
+      color: var(--success);
+      text-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
+    }
+
+    /* BREAKDOWN PANEL */
+    .breakdown-panel {
+      margin: 8px 16px 32px 16px;
+      max-width: 580px;
+      width: calc(100% - 32px);
+      align-self: center;
+      background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px 22px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 var(--border-light);
+    }
+
+    .breakdown-title {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    .breakdown-rows {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .breakdown-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      color: var(--muted);
+      padding: 8px 0;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-8px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .breakdown-row .bd-label { color: var(--text); font-weight: 600; }
+    .breakdown-row .bd-calc { color: var(--muted); }
+    .breakdown-row .bd-amt { color: var(--success); font-weight: 600; }
+
+    .breakdown-divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 16px 0 12px 0;
+    }
+
+    .breakdown-total-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+    }
+
+    .bd-total-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      letter-spacing: 0.05em;
+    }
+
+    .bd-total-amount {
+      font-family: 'DM Mono', monospace;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--accent);
+      text-shadow: 0 0 20px var(--accent-glow);
+      animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0.8); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .empty-breakdown {
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
+      padding: 12px 0;
+      font-weight: 500;
+    }
+
+    .custom-select option {
+      background: #1a2038;
+      color: #f5f7fc;
+    }
+
+    .custom-select {
+  background: var(--surface3);
+  color: var(--text);
+  border: 1.5px solid var(--border);
+}
+
+/* Hover effect (some browsers support it) */
+.custom-select option:hover {
+  background: var(--accent);
+  color: white;
+}
+
+.select-wrapper {
+  width: 100%;
+}
+
+.custom-select {
+  width: 100%;
+  height: 52px;
+  line-height: 1.2;
+}
+
+    /* Scrollbar */
+    #app::-webkit-scrollbar { width: 6px; }
+    #app::-webkit-scrollbar-track { background: transparent; }
+    #app::-webkit-scrollbar-thumb { 
+      background: var(--border); 
+      border-radius: 4px; 
+      transition: background 0.2s;
+    }
+    #app::-webkit-scrollbar-thumb:hover { background: var(--border-light); }
+
+    /* Fade in */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up { animation: fadeUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) both; }
+
+    .denom-row:nth-child(1) { animation-delay: 0.04s; }
+    .denom-row:nth-child(2) { animation-delay: 0.08s; }
+    .denom-row:nth-child(3) { animation-delay: 0.12s; }
+    .denom-row:nth-child(4) { animation-delay: 0.16s; }
+    .denom-row:nth-child(5) { animation-delay: 0.20s; }
+    .denom-row:nth-child(6) { animation-delay: 0.24s; }
+    .denom-row:nth-child(7) { animation-delay: 0.28s; }
+    .denom-row:nth-child(8) { animation-delay: 0.32s; }
+    .denom-row:nth-child(9) { animation-delay: 0.36s; }
+
+    /* ================= MOBILE OPTIMIZATION ================= */
+
+@media (max-width: 640px) {
+
+  /* Reduce padding globally */
+  .currency-card {
+    padding: 28px 18px;
+    border-radius: 20px;
+  }
+
+  .app-title {
+    font-size: 24px;
+  }
+
+  .app-logo {
+    width: 60px;
+    height: 60px;
+    font-size: 28px;
+  }
+
+  /* Header */
+  .main-header {
+    padding: 16px 14px;
+  }
+
+  .total-amount {
+    font-size: 30px;
+  }
+
+  /* Stack denomination row */
+  .denom-row {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 14px;
+  }
+
+  .denom-badge {
+    min-width: auto;
+    font-size: 13px;
+    padding: 6px 10px;
+  }
+
+  .denom-multiplier,
+  .denom-equals {
+    display: none; /* cleaner UI on mobile */
+  }
+
+  .denom-input {
+    width: 100%;
+    font-size: 16px;
+    padding: 10px;
+  }
+
+  .denom-subtotal {
+    width: 100%;
+    text-align: left;
+    font-size: 14px;
+  }
+
+  /* Breakdown */
+  .breakdown-panel {
+    padding: 18px 14px;
+    border-radius: 16px;
+  }
+
+  .bd-total-amount {
+    font-size: 20px;
+  }
+
+  /* Buttons */
+  .btn-primary {
+    padding: 14px;
+    font-size: 15px;
+  }
+
+  .btn-ghost,
+  .btn-reset {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+}
+  </style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js" type="text/javascript"></script>
+ </head>
+ <body>
+  <div id="app"><!-- ── CURRENCY SELECTION SCREEN ── -->
+   <div id="currency-screen" class="screen">
+    <div class="currency-card fade-up">
+     <div class="app-logo">
+      💵
+     </div>
+     <h1 class="app-title" id="ui-app-title">Cash Counter</h1>
+     <p class="app-subtitle">Count your notes, know your total.</p><label for="currency-select" class="field-label">Select Currency</label>
+     <div class="select-wrapper">
+      <select id="currency-select" class="custom-select">
+        <option value="INR">🇮🇳 INR — Indian Rupee (₹)</option>
+        <option value="USD">🇺🇸 USD — US Dollar ($)</option>
+        <option value="EUR">🇪🇺 EUR — Euro (€)</option>
+        <option value="GBP">🇬🇧 GBP — British Pound (£)</option>
+        <option value="JPY">🇯🇵 JPY — Japanese Yen (¥)</option>
+        <option value="CAD">🇨🇦 CAD — Canadian Dollar (CA$)</option>
+        <option value="AUD">🇦🇺 AUD — Australian Dollar (A$)</option>
+
+        <!-- NEW -->
+        <option value="CHF">🇨🇭 CHF — Swiss Franc (CHF)</option>
+        <option value="CNY">🇨🇳 CNY — Chinese Yuan (¥)</option>
+        <option value="SGD">🇸🇬 SGD — Singapore Dollar (S$)</option>
+        <option value="AED">🇦🇪 AED — UAE Dirham (د.إ)</option>
+        <option value="SAR">🇸🇦 SAR — Saudi Riyal (﷼)</option>
+      </select>      
+<svg class="select-arrow" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+       <path d="M6 9l6 6 6-6" />
+      </svg>
+     </div><button class="btn-primary" id="ui-continue-btn" onclick="saveCurrencyAndGo()">Continue</button>
+    </div>
+   </div><!-- ── MAIN SCREEN ── -->
+   <div id="main-screen" class="screen">
+    <header class="main-header">
+     <div class="header-top"><span class="header-app-name" id="header-title">Cash Counter</span>
+      <div class="header-actions"><button class="btn-ghost" onclick="showCurrencyScreen()">Change Currency</button> <button class="btn-reset" id="ui-reset-btn" onclick="resetAll()">Reset</button>
+      </div>
+     </div>
+     <div class="total-display">
+      <div class="total-label" id="currency-label">
+       Total Amount
+      </div>
+      <div class="total-amount" id="total-display">
+       0
+      </div>
+     </div>
+    </header>
+    <div class="denom-list" id="denom-list"><!-- Rows injected by JS -->
+    </div>
+    <div class="breakdown-panel" id="breakdown-panel">
+     <div class="breakdown-title">
+      Breakdown
+     </div>
+     <div class="breakdown-rows" id="breakdown-rows">
+      <div class="empty-breakdown">
+       Add note counts above to see breakdown.
+      </div>
+     </div>
+     <hr class="breakdown-divider" id="bd-divider" style="display:none">
+     <div class="breakdown-total-row" id="bd-total-row" style="display:none"><span class="bd-total-label">Total</span> <span class="bd-total-amount" id="bd-total"></span>
+     </div>
+    </div>
+   </div>
+  </div>
+  <script>
+// ─── CURRENCY DATA ─────────────────────────────────────────────────────────────
+const CURRENCIES = {
+  INR: { symbol: '₹', name: 'INR', denominations: [500, 200, 100, 50, 20, 10, 5, 2, 1], active: [500, 200, 100, 50, 20, 10, 5, 2, 1] },
+  USD: { symbol: '$', name: 'USD', denominations: [100, 50, 20, 10, 5, 2, 1], active: [100, 50, 20, 10, 5, 1] },
+  EUR: { symbol: '€', name: 'EUR', denominations: [500, 200, 100, 50, 20, 10, 5, 2, 1], active: [500, 200, 100, 50, 20, 10, 5] },
+  GBP: { symbol: '£', name: 'GBP', denominations: [50, 20, 10, 5, 2, 1], active: [50, 20, 10, 5] },
+  JPY: { symbol: '¥', name: 'JPY', denominations: [10000, 5000, 2000, 1000, 500, 100, 50, 10, 5, 1], active: [10000, 5000, 1000, 500, 100] },
+  CAD: { symbol: 'CA$', name: 'CAD', denominations: [100, 50, 20, 10, 5, 2, 1], active: [100, 50, 20, 10, 5] },
+  AUD: { symbol: 'A$', name: 'AUD', denominations: [100, 50, 20, 10, 5, 2, 1], active: [100, 50, 20, 10, 5] },
+  CHF: { symbol: 'CHF', name: 'CHF', denominations: [1000, 200, 100, 50, 20, 10, 5], active: [1000, 200, 100, 50, 20, 10] },
+  CNY: { symbol: '¥', name: 'CNY', denominations: [100, 50, 20, 10, 5, 1], active: [100, 50, 20, 10, 5] },
+  SGD: { symbol: 'S$', name: 'SGD', denominations: [1000, 100, 50, 10, 5, 2], active: [1000, 100, 50, 10, 5] },
+  AED: { symbol: 'د.إ', name: 'AED', denominations: [1000, 500, 200, 100, 50, 10, 5], active: [1000, 500, 200, 100, 50, 10] },
+  SAR: { symbol: '﷼', name: 'SAR', denominations: [500, 100, 50, 10, 5], active: [500, 100, 50, 10, 5] },
+};
+
+let currentCurrency = 'INR';
+let inputValues = {};
+
+// ─── INIT ──────────────────────────────────────────────────────────────────────
+if (window.elementSdk) {
+window.elementSdk.init({
+  defaultConfig: {
+    app_title: 'Cash Counter',
+    continue_button_text: 'Continue',
+    reset_button_text: 'Reset'
+  },
+  onConfigChange: async (config) => {
+    const title = config.app_title || 'Cash Counter';
+    const cont = config.continue_button_text || 'Continue';
+    const reset = config.reset_button_text || 'Reset';
+
+    document.getElementById('ui-app-title').textContent = title;
+    document.getElementById('header-title').textContent = title;
+    document.getElementById('ui-continue-btn').textContent = cont;
+    document.getElementById('ui-reset-btn').textContent = reset;
+  },
+  mapToCapabilities: (config) => ({
+    recolorables: [],
+    borderables: [],
+    fontEditable: undefined,
+    fontSizeable: undefined
+  }),
+  mapToEditPanelValues: (config) => new Map([
+    ['app_title', config.app_title || 'Cash Counter'],
+    ['continue_button_text', config.continue_button_text || 'Continue'],
+    ['reset_button_text', config.reset_button_text || 'Reset']
+  ])
+});
+}
+
+// ─── STARTUP ───────────────────────────────────────────────────────────────────
+(function init() {
+  const saved = localStorage.getItem('cashcounter_currency');
+  if (saved && CURRENCIES[saved]) {
+    currentCurrency = saved;
+    loadInputValues();
+    buildMainScreen();
+    showScreen('main-screen');
+  } else {
+    showScreen('currency-screen');
+  }
+})();
+
+// ─── SCREEN MANAGEMENT ────────────────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (id === 'main-screen') {
+    document.getElementById('app').scrollTop = 0;
+  }
+}
+
+function showCurrencyScreen() {
+  const sel = document.getElementById('currency-select');
+  sel.value = currentCurrency;
+  showScreen('currency-screen');
+}
+
+function saveCurrencyAndGo() {
+  const sel = document.getElementById('currency-select');
+  currentCurrency = sel.value;
+  localStorage.setItem('cashcounter_currency', currentCurrency);
+  // Reset values when switching currency
+  inputValues = {};
+  saveInputValues();
+  buildMainScreen();
+  showScreen('main-screen');
+}
+
+// ─── BUILD MAIN SCREEN ────────────────────────────────────────────────────────
+function buildMainScreen() {
+  const cur = CURRENCIES[currentCurrency];
+  // Header currency label
+  document.getElementById('currency-label').textContent = `Total (${cur.name})`;
+
+  // Build rows using only active denominations
+  const list = document.getElementById('denom-list');
+  list.innerHTML = '';
+
+  const toShow = cur.active || cur.denominations;
+  toShow.forEach(denom => {
+    const val = inputValues[denom] || 0;
+    const row = document.createElement('div');
+    row.className = 'denom-row fade-up';
+    row.innerHTML = `
+      <span class="denom-badge">${cur.symbol}${denom}</span>
+      <span class="denom-multiplier">×</span>
+      <input
+        class="denom-input"
+        type="tel"
+        inputmode="numeric"
+        pattern="[0-9]*"
+        min="0"
+        placeholder="0"
+        value="${val > 0 ? val : ''}"
+        data-denom="${denom}"
+        inputmode="numeric"
+        pattern="[0-9]*"
+        aria-label="${cur.symbol}${denom} note count"
+        oninput="handleInput(this)"
+      />
+      <span class="denom-equals">=</span>
+      <span class="denom-subtotal ${val > 0 ? 'active' : ''}" id="sub-${denom}">${val > 0 ? formatNum(val * denom) : '—'}</span>
+    `;
+    list.appendChild(row);
+  });
+
+  updateTotals();
+}
+
+// ─── INPUT HANDLING ───────────────────────────────────────────────────────────
+function handleInput(input) {
+  let raw = input.value.replace(/[^0-9]/g, '');
+  if (raw !== input.value) input.value = raw;
+
+  const denom = parseInt(input.dataset.denom);
+  const count = raw === '' ? 0 : Math.max(0, parseInt(raw) || 0);
+
+  inputValues[denom] = count;
+  saveInputValues();
+
+  // Update subtotal with animation
+  const sub = document.getElementById(`sub-${denom}`);
+  if (sub) {
+    if (count > 0) {
+      const target = count * denom;
+const current = parseInt(sub.textContent.replace(/[^\d]/g, '')) || 0;
+
+animateValue(
+  (val) => {
+    sub.textContent = formatNum(val);
+  },
+  current,
+  target,
+  300
+);
+      sub.classList.add('active');
+    } else {
+      sub.textContent = '—';
+      sub.classList.remove('active');
+    }
+  }
+
+  // Shimmer effect on row
+  const row = input.closest('.denom-row');
+  if (row && count > 0) {
+    row.classList.remove('updated');
+    void row.offsetWidth; // Trigger reflow
+    row.classList.add('updated');
+  }
+
+  updateTotals();
+}
+
+// ─── TOTALS & BREAKDOWN ────────────────────────────────────────────────────────
+function updateTotals() {
+  const cur = CURRENCIES[currentCurrency];
+  let total = 0;
+  const lines = [];
+
+  const toShow = cur.active || cur.denominations;
+  toShow.forEach(denom => {
+    const count = inputValues[denom] || 0;
+    if (count > 0) {
+      total += count * denom;
+      lines.push({ denom, count, subtotal: count * denom });
+    }
+  });
+
+  // Header total
+  const totalEl = document.getElementById('total-display');
+  const currentText = totalEl.textContent.replace(/[^\d]/g, '');
+const currentValue = parseInt(currentText) || 0;
+
+animateValue(
+  (val) => {
+    totalEl.textContent = cur.symbol + formatNum(val);
+  },
+  currentValue,
+  total
+);
+  totalEl.classList.toggle('has-value', total > 0);
+
+  // Breakdown
+  const bdRows = document.getElementById('breakdown-rows');
+  const bdDivider = document.getElementById('bd-divider');
+  const bdTotalRow = document.getElementById('bd-total-row');
+  const bdTotal = document.getElementById('bd-total');
+
+  if (lines.length === 0) {
+    bdRows.innerHTML = '<div class="empty-breakdown">Add note counts above to see breakdown.</div>';
+    bdDivider.style.display = 'none';
+    bdTotalRow.style.display = 'none';
+  } else {
+    // Selective update: track existing rows by denom
+    const existing = new Map();
+    bdRows.querySelectorAll('[data-bd]').forEach(el => {
+      existing.set(el.dataset.bd, el);
+    });
+
+    // Remove rows not in lines
+    const activeKeys = new Set(lines.map(l => String(l.denom)));
+    existing.forEach((el, key) => {
+      if (!activeKeys.has(key)) el.remove();
+    });
+
+    // Update or create rows
+    lines.forEach((line, idx) => {
+      const key = String(line.denom);
+      let rowEl = existing.get(key);
+      if (!rowEl) {
+        rowEl = document.createElement('div');
+        rowEl.className = 'breakdown-row';
+        rowEl.dataset.bd = key;
+        bdRows.appendChild(rowEl);
+      }
+      rowEl.innerHTML = `
+        <span class="bd-label">${cur.symbol}${line.denom}</span>
+        <span class="bd-calc">${line.count} × ${line.denom}</span>
+        <span class="bd-amt">${cur.symbol}${formatNum(line.subtotal)}</span>
+      `;
+
+      // Re-order: insert at correct position
+      const children = [...bdRows.children].filter(c => c.dataset.bd);
+      if (children[idx] !== rowEl) {
+        bdRows.insertBefore(rowEl, children[idx] || null);
+      }
+    });
+
+    bdDivider.style.display = 'block';
+    bdTotalRow.style.display = 'flex';
+    bdTotal.textContent = cur.symbol + formatNum(total);
+  }
+}
+
+// ─── RESET ─────────────────────────────────────────────────────────────────────
+function resetAll() {
+  inputValues = {};
+  saveInputValues();
+
+  // Clear inputs in DOM
+  document.querySelectorAll('.denom-input').forEach(inp => {
+    inp.value = '';
+  });
+  document.querySelectorAll('.denom-subtotal').forEach(el => {
+    el.textContent = '—';
+    el.classList.remove('active');
+  });
+
+  updateTotals();
+}
+
+// ─── LOCAL STORAGE ─────────────────────────────────────────────────────────────
+function saveInputValues() {
+  localStorage.setItem('cashcounter_values_' + currentCurrency, JSON.stringify(inputValues));
+}
+
+function loadInputValues() {
+  try {
+    const raw = localStorage.getItem('cashcounter_values_' + currentCurrency);
+    inputValues = raw ? JSON.parse(raw) : {};
+  } catch(e) {
+    inputValues = {};
+  }
+}
+
+function animateValue(setter, start, end, duration = 400) {
+  let startTime = null;
+
+  function animate(currentTime) {
+    if (!startTime) startTime = currentTime;
+
+    const progress = Math.min((currentTime - startTime) / duration, 1);
+
+    // smooth spring-like easing
+    const ease = progress < 0.5
+      ? 4 * progress * progress * progress
+      : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+
+    const value = Math.floor(start + (end - start) * ease);
+
+    setter(value); // ✅ no formatting here
+
+    if (progress < 1) {
+      requestAnimationFrame(animate);
+    }
+  }
+
+  requestAnimationFrame(animate);
+}
+
+// ─── HELPERS ───────────────────────────────────────────────────────────────────
+function formatNum(n) {
+  if (n === 0) return '0';
+  return n.toLocaleString('en-IN');
+}
+</script>
+</html>
