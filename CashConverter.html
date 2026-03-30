@@ -1,0 +1,865 @@
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cash Converter</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f0f1e;
+      --surface: #1a1a2e;
+      --surface-light: #252541;
+      --accent: #6366f1;
+      --accent-light: rgba(99, 102, 241, 0.1);
+      --accent-glow: rgba(99, 102, 241, 0.25);
+      --text: #ffffff;
+      --text-secondary: #b0b5d3;
+      --text-muted: #6b7280;
+      --border: #2d2d47;
+      --border-light: #3a3a52;
+      --success: #10b981;
+      --success-light: rgba(16, 185, 129, 0.1);
+      --warning: #f59e0b;
+      --warning-light: rgba(245, 158, 11, 0.1);
+      --error: #ef4444;
+      --error-light: rgba(239, 68, 68, 0.1);
+      
+      /* Denomination colors */
+      --denom-500: #8b5cf6;
+      --denom-200: #ec4899;
+      --denom-100: #f59e0b;
+      --denom-50: #06b6d4;
+      --denom-20: #14b8a6;
+      --denom-10: #3b82f6;
+      --denom-5: #a78bfa;
+      --denom-2: #fbbf24;
+      --denom-1: #6ee7b7;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: linear-gradient(135deg, var(--bg) 0%, #1a1a38 100%);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -webkit-touch-callout: none;
+    }
+
+    #app {
+      height: 100%;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes scaleIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    /* CURRENCY SELECTOR */
+    .currency-selector {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .currency-btn {
+      background: var(--surface-light);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      color: var(--text-secondary);
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 10px 16px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .currency-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-light);
+    }
+
+    .currency-btn.active {
+      background: linear-gradient(135deg, var(--accent), #818cf8);
+      border-color: var(--accent);
+      color: white;
+      box-shadow: 0 8px 24px var(--accent-glow);
+    }
+
+    /* MAIN CONTAINER */
+    .main-container {
+      flex: 1;
+      padding: 28px 20px;
+      max-width: 600px;
+      margin: 0 auto;
+      width: 100%;
+      animation: fadeIn 0.5s ease;
+    }
+
+    /* HEADER */
+    .converter-header {
+      margin-bottom: 32px;
+      text-align: center;
+    }
+
+    .header-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      display: inline-block;
+      animation: slideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .header-title {
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -0.8px;
+      margin: 0 0 8px 0;
+      background: linear-gradient(135deg, var(--text) 0%, var(--text-secondary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: slideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.1s both;
+    }
+
+    .header-subtitle {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin: 0;
+      animation: slideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.2s both;
+    }
+
+    /* INPUT SECTION */
+    .input-section {
+      background: linear-gradient(135deg, var(--surface) 0%, var(--surface-light) 100%);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px;
+      margin-bottom: 28px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), inset 0 1px 0 var(--border-light);
+      animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s both;
+    }
+
+    .input-label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .input-prefix {
+      position: absolute;
+      left: 18px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 28px;
+      font-weight: 600;
+      color: var(--accent);
+      pointer-events: none;
+    }
+
+    .amount-input {
+      width: 100%;
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: 14px;
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 32px;
+      font-weight: 600;
+      padding: 16px 18px 16px 56px;
+      outline: none;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      -webkit-appearance: none;
+      -moz-appearance: textfield;
+    }
+
+    .amount-input::-webkit-outer-spin-button,
+    .amount-input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    .amount-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .amount-input:hover {
+      border-color: var(--border-light);
+      background: linear-gradient(135deg, var(--surface), var(--surface-light));
+    }
+
+    .amount-input:focus {
+      border-color: var(--accent);
+      background: linear-gradient(135deg, var(--surface), var(--surface-light));
+      box-shadow: 0 0 0 3px var(--accent-light);
+    }
+
+    /* BREAKDOWN SECTION */
+    .breakdown-section {
+      margin-bottom: 32px;
+    }
+
+    .section-title {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      padding-left: 8px;
+    }
+
+    .breakdown-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .denom-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(135deg, var(--surface) 0%, var(--surface-light) 100%);
+      border: 2px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    .denom-card:nth-child(1) { animation-delay: 0.05s; }
+    .denom-card:nth-child(2) { animation-delay: 0.1s; }
+    .denom-card:nth-child(3) { animation-delay: 0.15s; }
+    .denom-card:nth-child(4) { animation-delay: 0.2s; }
+    .denom-card:nth-child(5) { animation-delay: 0.25s; }
+    .denom-card:nth-child(6) { animation-delay: 0.3s; }
+    .denom-card:nth-child(7) { animation-delay: 0.35s; }
+    .denom-card:nth-child(8) { animation-delay: 0.4s; }
+    .denom-card:nth-child(9) { animation-delay: 0.45s; }
+
+    .denom-card.active {
+      border-color: var(--accent);
+      background: linear-gradient(135deg, var(--surface) 0%, var(--accent-light) 100%);
+    }
+
+    .denom-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex: 1;
+    }
+
+    .denom-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .denom-label {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .denom-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .denom-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .denom-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--accent);
+      min-width: 60px;
+      text-align: right;
+    }
+
+    /* EMPTY STATE */
+    .empty-state {
+      text-align: center;
+      padding: 40px 24px;
+      color: var(--text-muted);
+    }
+
+    .empty-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    .empty-text {
+      font-size: 15px;
+      margin: 0;
+    }
+
+    /* SUMMARY CARD */
+    .summary-card {
+      background: linear-gradient(135deg, var(--accent), #818cf8);
+      border-radius: 20px;
+      padding: 28px;
+      text-align: center;
+      box-shadow: 0 20px 60px var(--accent-glow);
+      margin-top: 24px;
+      animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s both;
+    }
+
+    .summary-label {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.8);
+      margin-bottom: 8px;
+    }
+
+    .summary-amount {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 42px;
+      font-weight: 700;
+      color: white;
+      letter-spacing: -1px;
+      line-height: 1;
+    }
+
+    .summary-count {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.8);
+      margin-top: 12px;
+    }
+
+    /* REMAINING AMOUNT */
+    .remaining-card {
+      background: var(--warning-light);
+      border: 2px solid var(--warning);
+      border-radius: 16px;
+      padding: 20px;
+      margin-top: 20px;
+      display: none;
+    }
+
+    .remaining-card.show {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .remaining-icon {
+      font-size: 24px;
+      color: var(--warning);
+    }
+
+    .remaining-content {
+      flex: 1;
+    }
+
+    .remaining-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--warning);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .remaining-amount {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--warning);
+    }
+
+    /* SCROLLBAR */
+    #app::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    #app::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    #app::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px;
+      transition: background 0.2s;
+    }
+
+    #app::-webkit-scrollbar-thumb:hover {
+      background: var(--border-light);
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 480px) {
+      .main-container {
+        padding: 20px 16px;
+      }
+
+      .header-title {
+        font-size: 28px;
+      }
+
+      .amount-input {
+        font-size: 28px;
+      }
+
+      .summary-amount {
+        font-size: 36px;
+      }
+
+      .denom-card {
+        padding: 16px;
+      }
+
+      .denom-value {
+        font-size: 16px;
+      }
+
+      .input-section {
+        padding: 24px;
+      }
+    }
+
+    .reset-btn {
+      margin-top: 16px;
+      width: 100%;
+      padding: 12px;
+      border-radius: 12px;
+      border: 2px solid var(--border);
+      background: var(--surface-light);
+      color: var(--text-secondary);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .reset-btn:hover {
+      border-color: var(--error);
+      color: var(--error);
+      background: var(--error-light);
+    }
+    
+    .header-top {
+      width: 100%;
+      display: flex;
+      justify-content: flex-start;
+      margin-bottom: 10px;
+    }
+
+    .back-btn {
+      background: var(--surface-light);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      width: 58px;
+      height: 38px;
+      border-radius: 10px;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .back-btn:hover {
+      color: var(--accent);
+      border-color: var(--accent);
+      background: var(--accent-light);
+    }
+
+    .coin {
+      border-style: dashed;
+      opacity: 0.85;
+    }
+  </style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js" type="text/javascript"></script>
+ </head>
+ <body>
+  <div id="app">
+   <div class="main-container"><!-- Currency Selector -->
+    <div class="currency-selector" id="currency-selector"></div><!-- Header -->
+    <div class="converter-header">
+      <div class="top-bar">
+        <button class="back-btn" onclick="goBack(this)">Back</button>
+      </div>
+      <div class="header-icon">
+        💵
+      </div>
+     <h1 class="header-title" id="ui-app-title">Cash Converter</h1>
+     <p class="header-subtitle" id="ui-input-label">Enter Amount</p>
+    </div><!-- Input Section -->
+    <div class="input-section"><label for="amount-input" class="input-label">Amount to break down</label>
+     <div class="input-wrapper"><span class="input-prefix" id="currency-prefix">₹</span> <input type="number" id="amount-input" class="amount-input" placeholder="0" min="0" inputmode="decimal" aria-label="Enter amount">
+     </div>
+     <button id="reset-btn" class="reset-btn">Reset</button>
+    </div><!-- Breakdown Section -->
+    <div class="breakdown-section">
+     <div class="section-title" id="ui-breakdown-label">
+      Optimal Breakdown
+     </div>
+     <div class="breakdown-list" id="breakdown-list">
+      <div class="empty-state">
+       <div class="empty-icon">
+        📥
+       </div>
+       <p class="empty-text">Enter an amount above to see the breakdown</p>
+      </div>
+     </div>
+    </div><!-- Remaining Amount -->
+    <div class="remaining-card" id="remaining-card">
+     <div class="remaining-icon">
+      ⚠️
+     </div>
+     <div class="remaining-content">
+      <div class="remaining-label" id="ui-remaining-label">
+       Remaining
+      </div>
+      <div class="remaining-amount" id="remaining-amount">
+       0
+      </div>
+     </div>
+    </div><!-- Summary Card -->
+    <div class="summary-card" id="summary-card" style="display: none;">
+     <div class="summary-label">
+      Total
+     </div>
+     <div class="summary-amount" id="summary-amount">
+      ₹0
+     </div>
+     <div class="summary-count" id="summary-count">
+      0 notes
+     </div>
+    </div>
+   </div>
+  </div>
+  <script>
+    // Currency data with active denominations
+    const CURRENCIES = {
+      INR: {
+        symbol: '₹',
+        name: 'INR',
+        denominations: [500, 200, 100, 50, 20, 10, 5, 2, 1],
+        colors: {
+          500: '#8b5cf6',
+          200: '#ec4899',
+          100: '#f59e0b',
+          50: '#06b6d4',
+          20: '#14b8a6',
+          10: '#3b82f6',
+          5: '#a78bfa',
+          2: '#fbbf24',
+          1: '#6ee7b7'
+        }
+      },
+      USD: {
+        symbol: '$',
+        name: 'USD',
+        denominations: [100, 50, 20, 10, 5, 1],
+        colors: {
+          100: '#8b5cf6',
+          50: '#ec4899',
+          20: '#f59e0b',
+          10: '#06b6d4',
+          5: '#14b8a6',
+          1: '#3b82f6'
+        }
+      },
+      EUR: {
+        symbol: '€',
+        name: 'EUR',
+        denominations: [500, 200, 100, 50, 20, 10, 5],
+        colors: {
+          500: '#8b5cf6',
+          200: '#ec4899',
+          100: '#f59e0b',
+          50: '#06b6d4',
+          20: '#14b8a6',
+          10: '#3b82f6',
+          5: '#a78bfa'
+        }
+      },
+      GBP: {
+        symbol: '£',
+        name: 'GBP',
+        denominations: [50, 20, 10, 5],
+        colors: {
+          50: '#8b5cf6',
+          20: '#f59e0b',
+          10: '#06b6d4',
+          5: '#14b8a6'
+        }
+      },
+      JPY: {
+        symbol: '¥',
+        name: 'JPY',
+        denominations: [10000, 5000, 1000, 500, 100],
+        colors: {
+          10000: '#8b5cf6',
+          5000: '#ec4899',
+          1000: '#f59e0b',
+          500: '#06b6d4',
+          100: '#3b82f6'
+        }
+      },
+      CAD: {
+        symbol: 'CA$',
+        name: 'CAD',
+        denominations: [100, 50, 20, 10, 5],
+        colors: {
+          100: '#8b5cf6',
+          50: '#ec4899',
+          20: '#f59e0b',
+          10: '#06b6d4',
+          5: '#14b8a6'
+        }
+      },
+      AUD: {
+        symbol: 'A$',
+        name: 'AUD',
+        denominations: [100, 50, 20, 10, 5],
+        colors: {
+          100: '#8b5cf6',
+          50: '#ec4899',
+          20: '#f59e0b',
+          10: '#06b6d4',
+          5: '#14b8a6'
+        }
+      }
+    };
+
+    let currentCurrency = 'INR';
+    let currentAmount = 0;
+
+    // Initialize
+    function init() {
+      buildCurrencySelector();
+      setupEventListeners();
+      loadSavedCurrency();
+      updateCurrencyDisplay();
+    }
+
+    function buildCurrencySelector() {
+      const selector = document.getElementById('currency-selector');
+      selector.innerHTML = '';
+      Object.keys(CURRENCIES).forEach(code => {
+        const btn = document.createElement('button');
+        btn.className = `currency-btn ${code === currentCurrency ? 'active' : ''}`;
+        btn.textContent = code;
+        btn.onclick = () => switchCurrency(code);
+        selector.appendChild(btn);
+      });
+    }
+
+    function switchCurrency(code) {
+      currentCurrency = code;
+      localStorage.setItem('cashconverter_currency', code);
+      buildCurrencySelector();
+      updateCurrencyDisplay();
+      document.getElementById('amount-input').value = '';
+      currentAmount = 0;
+      updateBreakdown();
+    }
+
+    function updateCurrencyDisplay() {
+      const cur = CURRENCIES[currentCurrency];
+      document.getElementById('currency-prefix').textContent = cur.symbol;
+    }
+
+    function setupEventListeners() {
+      document.getElementById('amount-input').addEventListener('input', (e) => {
+        const val = e.target.value.replace(/[^0-9.]/g, '');
+        e.target.value = val;
+        currentAmount = parseFloat(val) || 0;
+        updateBreakdown();
+      });
+      document.getElementById('reset-btn').addEventListener('click', resetApp);
+    }
+
+    function updateBreakdown() {
+      const cur = CURRENCIES[currentCurrency];
+      const list = document.getElementById('breakdown-list');
+      const summaryCard = document.getElementById('summary-card');
+      const remainingCard = document.getElementById('remaining-card');
+
+      if (currentAmount <= 0) {
+        list.innerHTML = '<div class="empty-state"><div class="empty-icon">📥</div><p class="empty-text">Enter an amount above to see the breakdown</p></div>';
+        summaryCard.style.display = 'none';
+        remainingCard.classList.remove('show');
+        return;
+      }
+
+      const breakdown = calculateOptimalBreakdown(currentAmount, cur.denominations);
+      let totalNotes = 0;
+      let totalCoins = 0;
+
+      Object.entries(breakdown).forEach(([denom, count]) => {
+        if (parseInt(denom) === 1 || parseInt(denom) === 2 || parseInt(denom) === 5) {
+          totalCoins += count;
+        } else {
+          totalNotes += count;
+        }
+      });
+
+      // Build breakdown cards
+      list.innerHTML = '';
+      let hasItems = false;
+
+      cur.denominations.forEach(denom => {
+        if (breakdown[denom] && breakdown[denom] > 0) {
+          hasItems = true;
+          const card = document.createElement('div');
+          card.className = 'denom-card active';
+          const color = cur.colors[denom] || '#6366f1';
+          const type = (denom === 1 || denom === 2 || denom === 5) ? 'coin' : 'note';
+
+          card.innerHTML = `
+            <div class="denom-left">
+              <div class="denom-dot" style="background: ${color};"></div>
+              <div class="denom-label">
+                <div class="denom-value">${cur.symbol}${denom}</div>
+                <div class="denom-desc">
+                  ${breakdown[denom]} × ${type}${breakdown[denom] > 1 ? 's' : ''}
+                </div>
+              </div>
+            </div>
+            <div class="denom-count">${breakdown[denom]}</div>
+          `;
+          if (denom === 1 || denom === 2 || denom === 5) {
+            card.classList.add('coin');
+          }
+          list.appendChild(card);
+        }
+      });
+
+      if (!hasItems) {
+        list.innerHTML = '<div class="empty-state"><div class="empty-icon">📥</div><p class="empty-text">No breakdown available</p></div>';
+        summaryCard.style.display = 'none';
+        remainingCard.classList.remove('show');
+        return;
+      }
+
+      // Update summary
+      const totalAmount = Object.entries(breakdown).reduce((sum, [denom, count]) => sum + (parseInt(denom) * count), 0);
+      document.getElementById('summary-amount').textContent = cur.symbol + formatNum(totalAmount);
+      let summaryText = '';
+
+      if (totalNotes > 0) {
+        summaryText += `${totalNotes} note${totalNotes !== 1 ? 's' : ''}`;
+      }
+
+      if (totalCoins > 0) {
+        if (summaryText) summaryText += ' + ';
+        summaryText += `${totalCoins} coin${totalCoins !== 1 ? 's' : ''}`;
+      }
+
+      document.getElementById('summary-count').textContent = summaryText;
+      summaryCard.style.display = 'block';
+
+      // Handle remaining amount
+      const remaining = currentAmount - totalAmount;
+      if (remaining > 0.01) {
+        document.getElementById('remaining-amount').textContent = cur.symbol + formatNum(remaining);
+        remainingCard.classList.add('show');
+      } else {
+        remainingCard.classList.remove('show');
+      }
+    }
+
+    function calculateOptimalBreakdown(amount, denominations) {
+      const breakdown = {};
+      let remaining = amount;
+
+      denominations.forEach(denom => {
+        if (remaining >= denom) {
+          const count = Math.floor(remaining / denom);
+          breakdown[denom] = count;
+          remaining -= count * denom;
+        }
+      });
+
+      return breakdown;
+    }
+
+    function formatNum(n) {
+      if (n === 0) return '0';
+      return n.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+    }
+
+    function resetApp() {
+      currentAmount = 0;
+
+      const input = document.getElementById('amount-input');
+      input.value = '';
+      input.focus();
+
+      // Reset UI properly
+      document.getElementById('breakdown-list').innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">📥</div>
+          <p class="empty-text">Enter an amount above to see the breakdown</p>
+        </div>
+      `;
+
+      document.getElementById('summary-card').style.display = 'none';
+      document.getElementById('remaining-card').classList.remove('show');
+    }
+
+
+    function goBack(btn) {
+      btn.style.transform = 'scale(0.95)';
+      btn.style.opacity = '0.7';
+
+      setTimeout(() => {
+        window.location.href = 'index.html'; // your Cash Counter page
+      }, 150);
+    }
+
+    function loadSavedCurrency() {
+      const saved = localStorage.getItem('cashconverter_currency');
+      if (saved && CURRENCIES[saved]) {
+        currentCurrency = saved;
+      }
+    }
+
+    // Start
+    init();
+  </script>
+</html>
